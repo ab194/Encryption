@@ -14,6 +14,8 @@ This repository is still a learning project, but it now includes small command-l
 ├── aes/
 │   ├── aes-encrypt.py
 │   └── aes-decrypt.py
+├── bash/
+│   └── gpg-file.sh
 ├── requirements.txt
 └── rsa/
     └── rsa_cli.py
@@ -22,6 +24,7 @@ This repository is still a learning project, but it now includes small command-l
 ## Requirements
 
 - Python 3
+- `gpg` (for the Bash demo)
 - `pycryptodome`
 - `rsa`
 
@@ -133,6 +136,54 @@ python3 rsa/rsa_cli.py encrypt "hello world" --public-key ./pub.pem --output ./c
 python3 rsa/rsa_cli.py decrypt --input ./cipher.bin --private-key ./priv.pem
 ```
 
+## Bash GPG Demo
+
+The Bash example lives in `bash/gpg-file.sh`.
+
+### What It Does
+
+The script automates file encryption and decryption with the Linux `gpg` CLI.
+
+- encrypts files with either a recipient public key or a symmetric passphrase
+- decrypts `.gpg`, `.pgp`, or `.asc` files back to plaintext
+- supports optional ASCII armor output
+- supports optional custom `--homedir` paths for isolated GPG keyrings
+
+### Bash GPG Usage
+
+Make the script executable once:
+
+```bash
+chmod +x bash/gpg-file.sh
+```
+
+Encrypt a file with a symmetric passphrase:
+
+```bash
+printf 'my secret data' > bash/message.txt
+printf 'strong-passphrase' > bash/pass.txt
+bash/gpg-file.sh encrypt --input bash/message.txt --symmetric --passphrase-file bash/pass.txt
+```
+
+Decrypt the result:
+
+```bash
+bash/gpg-file.sh decrypt --input bash/message.txt.gpg --passphrase-file bash/pass.txt
+```
+
+Encrypt for a GPG recipient:
+
+```bash
+bash/gpg-file.sh encrypt --input bash/message.txt --recipient alice@example.com --armor
+```
+
+You can override the output path when needed:
+
+```bash
+bash/gpg-file.sh encrypt --input ./message.txt --symmetric --output ./message.txt.gpg
+bash/gpg-file.sh decrypt --input ./message.txt.gpg --output ./message.txt
+```
+
 ## Notes
 
 These scripts are useful for learning and local experimentation, but they are not production-ready security tooling.
@@ -149,5 +200,6 @@ This repository now provides:
 - `requirements.txt` for dependencies
 - `.env.example` for documented default configuration
 - a working AES encrypt/decrypt CLI
+- a Bash GPG encrypt/decrypt CLI
 - a renamed RSA module that avoids the original import conflict
 - a small RSA CLI for key generation, signing, verification, encryption, and decryption
