@@ -1,2 +1,3 @@
 pycryptodome
 rsa
+cryptography
