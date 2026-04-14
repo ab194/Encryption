@@ -12,6 +12,8 @@ This repository is still a learning project, but it now includes small command-l
 ```text
 .
 ├── aes/
+│   ├── aes-archive.py
+│   ├── aes-xts-archive.py
 │   ├── aes-encrypt.py
 │   └── aes-decrypt.py
 ├── bash/
@@ -30,6 +32,7 @@ This repository is still a learning project, but it now includes small command-l
 - `gpg` (for the Bash demo)
 - `pycryptodome`
 - `rsa`
+- `cryptography`
 
 Install the dependencies with:
 
@@ -49,6 +52,8 @@ The AES example uses:
 
 - `aes/aes-encrypt.py` to encrypt a file
 - `aes/aes-decrypt.py` to decrypt it
+- `aes/aes-archive.py` to encrypt and decrypt complete files or folders
+- `aes/aes-xts-archive.py` to encrypt and decrypt complete files or folders with AES-XTS
 
 ### What It Does
 
@@ -85,6 +90,53 @@ You can also override the defaults:
 python3 aes/aes-encrypt.py ./message.txt --output ./message.aes --key 1234567891234567
 python3 aes/aes-decrypt.py ./message.aes --output ./message.txt --key 1234567891234567
 ```
+
+### AES Folder/File Archive Usage
+
+Use `aes/aes-archive.py` when you want to encrypt a complete folder, a nested folder tree, or a file of any type. It first stores the input as a TAR archive, then encrypts that archive with AES in `OCB` mode.
+
+Encrypt a folder:
+
+```bash
+python3 aes/aes-archive.py encrypt ./my-folder --output ./my-folder.aes --key 12345678912345678912345678912345
+```
+
+Decrypt and extract it:
+
+```bash
+python3 aes/aes-archive.py decrypt ./my-folder.aes --output ./restored --key 12345678912345678912345678912345
+```
+
+Encrypt a single file, including binary files:
+
+```bash
+python3 aes/aes-archive.py encrypt ./photo.png --output ./photo.png.aes --key 12345678912345678912345678912345
+```
+
+The extracted folder keeps the original top-level name. For example, decrypting `./my-folder.aes` into `./restored` creates `./restored/my-folder/...`.
+
+### AES-XTS Folder/File Archive Usage
+
+Use `aes/aes-xts-archive.py` when you specifically want AES-XTS. It stores the input as a TAR archive, encrypts that archive in XTS sectors, and adds an HMAC so wrong keys or corrupted encrypted archives are rejected before extraction.
+
+Encrypt a folder with AES-256-XTS:
+
+```bash
+python3 aes/aes-xts-archive.py encrypt ./my-folder --output ./my-folder.xts.aes --key 0123456789abcdef0123456789abcdeffedcba9876543210fedcba9876543210
+```
+
+Decrypt and extract it:
+
+```bash
+python3 aes/aes-xts-archive.py decrypt ./my-folder.xts.aes --output ./restored --key 0123456789abcdef0123456789abcdeffedcba9876543210fedcba9876543210
+```
+
+AES-XTS uses double-length keys:
+
+- 32 bytes total for AES-128-XTS
+- 64 bytes total for AES-256-XTS
+
+AES-192-XTS is not supported. The two halves of the XTS key must be different.
 
 ## RSA Demo
 
@@ -251,6 +303,9 @@ The Bash implementation (`bash/password_generator.sh`) is a pure Bash script wit
 These scripts are useful for learning and local experimentation, but they are not production-ready security tooling.
 
 - The default AES key is hard-coded for example purposes.
+- Use a 32-byte AES key for AES-256, a 24-byte key for AES-192, or a 16-byte key for AES-128.
+- AES-XTS uses 32-byte keys for AES-128-XTS and 64-byte keys for AES-256-XTS.
+- XTS mode is designed for disk encryption; this repository wraps it around TAR archives for learning and adds an HMAC for integrity.
 - RSA encryption is only suitable here for short messages.
 - Private keys are written to disk without extra protection.
 - There is no secret management, passphrase handling, or automated tests.
@@ -263,6 +318,8 @@ This repository now provides:
 - `passwdGen.requirements.txt` for password generator dependencies (none)
 - `.env.example` for documented default configuration
 - a working AES encrypt/decrypt CLI
+- an AES archive CLI for encrypting complete folders and binary files
+- an AES-XTS archive CLI for encrypting complete folders and binary files
 - a Bash GPG encrypt/decrypt CLI
 - a renamed RSA module that avoids the original import conflict
 - a small RSA CLI for key generation, signing, verification, encryption, and decryption
